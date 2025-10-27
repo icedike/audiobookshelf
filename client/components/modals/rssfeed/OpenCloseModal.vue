@@ -32,6 +32,16 @@
             </div>
             <div>{{ currentFeed.meta.ownerEmail }}</div>
           </div>
+          <div v-if="currentFeed.meta.categories && currentFeed.meta.categories.length" class="flex py-0.5">
+            <div class="w-48">
+              <span class="text-white/60 uppercase text-sm">iTunes Categories</span>
+            </div>
+            <div>
+              <div v-for="(cat, idx) in currentFeed.meta.categories" :key="idx" class="text-sm">
+                {{ cat.category }}<span v-if="cat.subcategory"> > {{ cat.subcategory }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div v-else class="w-full">
@@ -65,7 +75,8 @@ export default {
       metadataDetails: {
         preventIndexing: true,
         ownerName: '',
-        ownerEmail: ''
+        ownerEmail: '',
+        categories: []
       }
     }
   },

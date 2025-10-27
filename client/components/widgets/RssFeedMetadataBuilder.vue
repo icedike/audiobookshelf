@@ -24,6 +24,31 @@
         <div class="w-full relative mb-1">
           <ui-text-input-with-label v-model="ownerEmail" :label="$strings.LabelRSSFeedCustomOwnerEmail" />
         </div>
+
+        <!-- iTunes Categories -->
+        <div class="w-full pt-4">
+          <p class="text-sm font-semibold mb-2">iTunes Categories <span class="text-xs text-gray-400">(Optional, up to 3)</span></p>
+          <div v-for="(category, index) in categories" :key="index" class="flex items-center mb-2 space-x-2">
+            <div class="flex-1">
+              <select v-model="categories[index].category" class="w-full bg-primary border border-gray-600 rounded px-2 py-1 text-sm" @change="onCategoryChange(index)">
+                <option value="">Select Category</option>
+                <option v-for="cat in categoryNames" :key="cat" :value="cat">{{ cat }}</option>
+              </select>
+            </div>
+            <div class="flex-1">
+              <select v-model="categories[index].subcategory" class="w-full bg-primary border border-gray-600 rounded px-2 py-1 text-sm" :disabled="!categories[index].category || !subcategoriesFor(categories[index].category).length">
+                <option value="">{{ categories[index].category && subcategoriesFor(categories[index].category).length ? 'Select Subcategory (Optional)' : 'No Subcategories' }}</option>
+                <option v-for="subcat in subcategoriesFor(categories[index].category)" :key="subcat" :value="subcat">{{ subcat }}</option>
+              </select>
+            </div>
+            <button v-if="categories.length > 1" type="button" class="text-error hover:text-red-400" @click="removeCategory(index)">
+              <span class="material-icons text-lg">close</span>
+            </button>
+          </div>
+          <button v-if="categories.length < 3" type="button" class="text-xs text-gray-300 hover:text-white mt-1" @click="addCategory">
+            + Add Category
+          </button>
+        </div>
       </template>
     </div>
   </div>
@@ -38,18 +63,35 @@ export default {
         return {
           preventIndexing: true,
           ownerName: '',
-          ownerEmail: ''
+          ownerEmail: '',
+          categories: []
         }
       }
     }
   },
   data() {
     return {
-      showAdvancedView: false
+      showAdvancedView: false,
+      categories: []
     }
   },
-  watch: {},
+  watch: {
+    'value.categories': {
+      immediate: true,
+      handler(newVal) {
+        if (newVal && Array.isArray(newVal) && newVal.length > 0) {
+          this.categories = newVal.map(cat => ({ ...cat }))
+        } else {
+          // Initialize with empty category if none exist
+          this.categories = []
+        }
+      }
+    }
+  },
   computed: {
+    categoryNames() {
+      return Object.keys(this.$constants.iTunesCategories)
+    },
     preventIndexing: {
       get() {
         return this.value.preventIndexing
@@ -84,7 +126,36 @@ export default {
       }
     }
   },
-  methods: {},
+  methods: {
+    subcategoriesFor(category) {
+      if (!category || !this.$constants.iTunesCategories[category]) {
+        return []
+      }
+      return this.$constants.iTunesCategories[category]
+    },
+    onCategoryChange(index) {
+      // Clear subcategory when category changes
+      this.categories[index].subcategory = ''
+      this.emitCategories()
+    },
+    addCategory() {
+      if (this.categories.length < 3) {
+        this.categories.push({ category: '', subcategory: '' })
+      }
+    },
+    removeCategory(index) {
+      this.categories.splice(index, 1)
+      this.emitCategories()
+    },
+    emitCategories() {
+      // Filter out empty categories and emit
+      const validCategories = this.categories.filter(cat => cat.category)
+      this.$emit('input', {
+        ...this.value,
+        categories: validCategories
+      })
+    }
+  },
   mounted() {}
 }
 </script>

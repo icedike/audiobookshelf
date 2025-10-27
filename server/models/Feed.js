@@ -3,12 +3,14 @@ const { DataTypes, Model } = require('sequelize')
 const Logger = require('../Logger')
 
 const RSS = require('../libs/rss')
+const { mapGenresToCategory, getDefaultCategory, validateCategory } = require('../utils/podcastCategories')
 
 /**
  * @typedef FeedOptions
  * @property {boolean} preventIndexing
  * @property {string} ownerName
  * @property {string} ownerEmail
+ * @property {Array<{category: string, subcategory: string}>} categories
  */
 
 /**
@@ -60,6 +62,8 @@ class Feed extends Model {
     this.preventIndexing
     /** @type {string} */
     this.coverPath
+    /** @type {Array<{category: string, subcategory: string}>} */
+    this.categories
     /** @type {UUIDV4} */
     this.userId
     /** @type {Date} */
@@ -135,6 +139,26 @@ class Feed extends Model {
       feedObj.preventIndexing = feedOptions.preventIndexing
       feedObj.ownerName = feedOptions.ownerName
       feedObj.ownerEmail = feedOptions.ownerEmail
+
+      // Handle categories
+      if (feedOptions.categories && Array.isArray(feedOptions.categories) && feedOptions.categories.length > 0) {
+        // Use user-provided categories (validate and limit to 3)
+        feedObj.categories = feedOptions.categories.slice(0, 3).filter(cat =>
+          cat.category && validateCategory(cat.category, cat.subcategory)
+        )
+      }
+    }
+
+    // If no categories set yet, determine default based on media type and genres
+    if (!feedObj.categories || feedObj.categories.length === 0) {
+      if (libraryItem.mediaType === 'podcast') {
+        // Try to map from podcast genres
+        const mappedCategory = media.genres && media.genres.length > 0 ? mapGenresToCategory(media.genres) : null
+        feedObj.categories = mappedCategory ? [mappedCategory] : [getDefaultCategory('podcast')]
+      } else {
+        // For audiobooks, use Arts > Books
+        feedObj.categories = [getDefaultCategory('book')]
+      }
     }
 
     return feedObj
@@ -227,6 +251,19 @@ class Feed extends Model {
       feedObj.preventIndexing = feedOptions.preventIndexing
       feedObj.ownerName = feedOptions.ownerName
       feedObj.ownerEmail = feedOptions.ownerEmail
+
+      // Handle categories
+      if (feedOptions.categories && Array.isArray(feedOptions.categories) && feedOptions.categories.length > 0) {
+        // Use user-provided categories (validate and limit to 3)
+        feedObj.categories = feedOptions.categories.slice(0, 3).filter(cat =>
+          cat.category && validateCategory(cat.category, cat.subcategory)
+        )
+      }
+    }
+
+    // If no categories set, use default for books
+    if (!feedObj.categories || feedObj.categories.length === 0) {
+      feedObj.categories = [getDefaultCategory('book')]
     }
 
     return {
@@ -316,6 +353,19 @@ class Feed extends Model {
       feedObj.preventIndexing = feedOptions.preventIndexing
       feedObj.ownerName = feedOptions.ownerName
       feedObj.ownerEmail = feedOptions.ownerEmail
+
+      // Handle categories
+      if (feedOptions.categories && Array.isArray(feedOptions.categories) && feedOptions.categories.length > 0) {
+        // Use user-provided categories (validate and limit to 3)
+        feedObj.categories = feedOptions.categories.slice(0, 3).filter(cat =>
+          cat.category && validateCategory(cat.category, cat.subcategory)
+        )
+      }
+    }
+
+    // If no categories set, use default for books
+    if (!feedObj.categories || feedObj.categories.length === 0) {
+      feedObj.categories = [getDefaultCategory('book')]
     }
 
     return {
@@ -388,7 +438,8 @@ class Feed extends Model {
         ownerEmail: DataTypes.STRING,
         explicit: DataTypes.BOOLEAN,
         preventIndexing: DataTypes.BOOLEAN,
-        coverPath: DataTypes.STRING
+        coverPath: DataTypes.STRING,
+        categories: DataTypes.JSON
       },
       {
         sequelize,
@@ -578,6 +629,33 @@ class Feed extends Model {
 
     if (this.description) {
       customElements.push({ 'itunes:summary': { _cdata: this.description } })
+    }
+
+    // Add iTunes categories (required by Apple Podcasts)
+    if (this.categories && Array.isArray(this.categories) && this.categories.length > 0) {
+      this.categories.forEach((cat) => {
+        if (cat.category) {
+          if (cat.subcategory) {
+            // Category with subcategory: <itunes:category text="Business"><itunes:category text="Investing"/></itunes:category>
+            customElements.push({
+              'itunes:category': [
+                { _attr: { text: cat.category } },
+                { 'itunes:category': { _attr: { text: cat.subcategory } } }
+              ]
+            })
+          } else {
+            // Category without subcategory: <itunes:category text="Technology"/>
+            customElements.push({
+              'itunes:category': { _attr: { text: cat.category } }
+            })
+          }
+        }
+      })
+    } else {
+      // Fallback: add default category if none specified (should not happen with our logic, but safety)
+      customElements.push({
+        'itunes:category': { _attr: { text: 'Arts' } }
+      })
     }
 
     const itunesOwnersData = []

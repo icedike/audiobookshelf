@@ -270,11 +270,20 @@ class RssFeedManager {
       metadataDetails.preventIndexing = true
     }
 
-    return {
+    const feedOptions = {
       preventIndexing: metadataDetails.preventIndexing,
       ownerName: metadataDetails.ownerName && typeof metadataDetails.ownerName === 'string' ? metadataDetails.ownerName : null,
       ownerEmail: metadataDetails.ownerEmail && typeof metadataDetails.ownerEmail === 'string' ? metadataDetails.ownerEmail : null
     }
+
+    // Handle categories if provided
+    if (metadataDetails.categories && Array.isArray(metadataDetails.categories)) {
+      feedOptions.categories = metadataDetails.categories.filter(cat =>
+        cat && typeof cat === 'object' && cat.category
+      ).slice(0, 3) // Limit to 3 categories as per Apple Podcasts spec
+    }
+
+    return feedOptions
   }
 
   /**
