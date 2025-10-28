@@ -1,2 +1,12 @@
-User-Agent: * 
-Disallow: / 
+User-Agent: *
+# Block most of the site for privacy
+Disallow: /config/
+Disallow: /login
+Disallow: /account
+Disallow: /batch
+Disallow: /upload
+
+# Allow public RSS feeds and podcast content
+Allow: /feed/
+Allow: /item/
+Allow: /robots.txt
