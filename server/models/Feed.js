@@ -11,6 +11,7 @@ const { mapGenresToCategory, getDefaultCategory, validateCategory } = require('.
  * @property {string} ownerName
  * @property {string} ownerEmail
  * @property {Array<{category: string, subcategory: string}>} categories
+ * @property {Object<string, string>} platformLinks
  */
 
 /**
@@ -64,6 +65,8 @@ class Feed extends Model {
     this.coverPath
     /** @type {Array<{category: string, subcategory: string}>} */
     this.categories
+    /** @type {Object<string, string>} */
+    this.platformLinks
     /** @type {UUIDV4} */
     this.userId
     /** @type {Date} */
@@ -146,6 +149,11 @@ class Feed extends Model {
         feedObj.categories = feedOptions.categories.slice(0, 3).filter(cat =>
           cat.category && validateCategory(cat.category, cat.subcategory)
         )
+      }
+
+      // Handle platform links
+      if (feedOptions.platformLinks && typeof feedOptions.platformLinks === 'object') {
+        feedObj.platformLinks = feedOptions.platformLinks
       }
     }
 
@@ -259,6 +267,11 @@ class Feed extends Model {
           cat.category && validateCategory(cat.category, cat.subcategory)
         )
       }
+
+      // Handle platform links
+      if (feedOptions.platformLinks && typeof feedOptions.platformLinks === 'object') {
+        feedObj.platformLinks = feedOptions.platformLinks
+      }
     }
 
     // If no categories set, use default for books
@@ -361,6 +374,11 @@ class Feed extends Model {
           cat.category && validateCategory(cat.category, cat.subcategory)
         )
       }
+
+      // Handle platform links
+      if (feedOptions.platformLinks && typeof feedOptions.platformLinks === 'object') {
+        feedObj.platformLinks = feedOptions.platformLinks
+      }
     }
 
     // If no categories set, use default for books
@@ -439,7 +457,8 @@ class Feed extends Model {
         explicit: DataTypes.BOOLEAN,
         preventIndexing: DataTypes.BOOLEAN,
         coverPath: DataTypes.STRING,
-        categories: DataTypes.JSON
+        categories: DataTypes.JSON,
+        platformLinks: DataTypes.JSON
       },
       {
         sequelize,

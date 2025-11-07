@@ -188,6 +188,75 @@ class RssFeedManager {
   }
 
   /**
+   * Get feed data as JSON for public podcast pages
+   *
+   * @param {string} slug
+   * @param {string} serverAddress
+   * @returns {Promise<Object|null>}
+   */
+  async getFeedDataAsJson(slug, serverAddress) {
+    let feed = await Database.feedModel.findOne({
+      where: {
+        slug
+      },
+      include: {
+        model: Database.feedEpisodeModel
+      }
+    })
+
+    if (!feed) {
+      return null
+    }
+
+    const feedRequiresUpdate = await this.checkFeedRequiresUpdate(feed)
+    if (feedRequiresUpdate) {
+      Logger.info(`[RssFeedManager] Feed "${feed.title}" requires update - updating feed`)
+      feed = await feed.updateFeedForEntity()
+    }
+
+    // Convert feed episodes to JSON format
+    const episodes = feed.feedEpisodes.map(episode => ({
+      id: episode.id,
+      title: episode.title,
+      description: episode.description,
+      enclosure: episode.enclosure,
+      pubDate: episode.pubDate,
+      link: episode.link,
+      author: episode.author,
+      explicit: episode.explicit,
+      duration: episode.duration,
+      season: episode.season,
+      episode: episode.episode,
+      episodeType: episode.episodeType,
+      audioUrl: `${serverAddress}/feed/${slug}/item/${episode.id}/${episode.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.mp3`
+    }))
+
+    return {
+      id: feed.id,
+      slug: feed.slug,
+      entityType: feed.entityType,
+      entityId: feed.entityId,
+      title: feed.title,
+      description: feed.description,
+      author: feed.author,
+      podcastType: feed.podcastType,
+      language: feed.language,
+      ownerName: feed.ownerName,
+      ownerEmail: feed.ownerEmail,
+      explicit: feed.explicit,
+      coverPath: feed.coverPath,
+      coverUrl: `${serverAddress}/feed/${slug}/cover`,
+      imageURL: feed.imageURL,
+      feedURL: feed.feedURL,
+      siteURL: feed.siteURL,
+      preventIndexing: feed.preventIndexing,
+      categories: feed.categories || [],
+      platformLinks: feed.platformLinks || {},
+      episodes
+    }
+  }
+
+  /**
    * GET: /feed/:slug/item/:episodeId/*
    *
    * @param {Request} req
@@ -281,6 +350,11 @@ class RssFeedManager {
       feedOptions.categories = metadataDetails.categories.filter(cat =>
         cat && typeof cat === 'object' && cat.category
       ).slice(0, 3) // Limit to 3 categories as per Apple Podcasts spec
+    }
+
+    // Handle platform links if provided
+    if (metadataDetails.platformLinks && typeof metadataDetails.platformLinks === 'object') {
+      feedOptions.platformLinks = metadataDetails.platformLinks
     }
 
     return feedOptions

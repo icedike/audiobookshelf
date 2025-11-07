@@ -9,4 +9,5 @@ Disallow: /upload
 # Allow public RSS feeds and podcast content
 Allow: /feed/
 Allow: /item/
+Allow: /p/
 Allow: /robots.txt

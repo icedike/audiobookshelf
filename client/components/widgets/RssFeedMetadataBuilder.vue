@@ -49,6 +49,21 @@
             + Add Category
           </button>
         </div>
+
+        <!-- Platform Links -->
+        <div class="w-full pt-4 mt-4 border-t border-gray-700">
+          <p class="text-sm font-semibold mb-1">Platform Subscription Links</p>
+          <p class="text-xs text-gray-400 mb-3">Add links to your podcast on various platforms (Apple Podcasts, Spotify, etc.)</p>
+
+          <div v-for="platform in availablePlatforms" :key="platform.key" class="w-full relative mb-2">
+            <ui-text-input-with-label
+              v-model="platformLinks[platform.key]"
+              :label="platform.name"
+              :placeholder="platform.placeholder"
+              @input="emitPlatformLinks"
+            />
+          </div>
+        </div>
       </template>
     </div>
   </div>
@@ -64,7 +79,8 @@ export default {
           preventIndexing: true,
           ownerName: '',
           ownerEmail: '',
-          categories: []
+          categories: [],
+          platformLinks: {}
         }
       }
     }
@@ -72,7 +88,18 @@ export default {
   data() {
     return {
       showAdvancedView: false,
-      categories: []
+      categories: [],
+      platformLinks: {},
+      availablePlatforms: [
+        { key: 'applepodcasts', name: 'Apple Podcasts', placeholder: 'https://podcasts.apple.com/podcast/id1234567890' },
+        { key: 'spotify', name: 'Spotify', placeholder: 'https://open.spotify.com/show/xxxxx' },
+        { key: 'googlepodcasts', name: 'Google Podcasts', placeholder: 'https://podcasts.google.com/feed/xxxxx' },
+        { key: 'youtube', name: 'YouTube', placeholder: 'https://youtube.com/@podcast-name' },
+        { key: 'stitcher', name: 'Stitcher', placeholder: 'https://www.stitcher.com/show/xxxxx' },
+        { key: 'overcast', name: 'Overcast', placeholder: 'https://overcast.fm/itunes1234567890' },
+        { key: 'pocketcasts', name: 'Pocket Casts', placeholder: 'https://pca.st/xxxxx' },
+        { key: 'castro', name: 'Castro', placeholder: 'https://castro.fm/podcast/xxxxx' }
+      ]
     }
   },
   watch: {
@@ -84,6 +111,16 @@ export default {
         } else {
           // Initialize with empty category if none exist
           this.categories = []
+        }
+      }
+    },
+    'value.platformLinks': {
+      immediate: true,
+      handler(newVal) {
+        if (newVal && typeof newVal === 'object') {
+          this.platformLinks = { ...newVal }
+        } else {
+          this.platformLinks = {}
         }
       }
     }
@@ -153,6 +190,20 @@ export default {
       this.$emit('input', {
         ...this.value,
         categories: validCategories
+      })
+    },
+    emitPlatformLinks() {
+      // Filter out empty platform links and emit
+      const validPlatformLinks = {}
+      Object.keys(this.platformLinks).forEach(key => {
+        const value = this.platformLinks[key]
+        if (value && value.trim()) {
+          validPlatformLinks[key] = value.trim()
+        }
+      })
+      this.$emit('input', {
+        ...this.value,
+        platformLinks: validPlatformLinks
       })
     }
   },
