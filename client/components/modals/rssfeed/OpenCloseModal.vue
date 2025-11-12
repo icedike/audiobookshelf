@@ -73,7 +73,7 @@ export default {
       newFeedSlug: null,
       currentFeed: null,
       metadataDetails: {
-        preventIndexing: true,
+        preventIndexing: false,
         ownerName: '',
         ownerEmail: '',
         categories: []

@@ -690,10 +690,6 @@ class Feed extends Model {
       })
     }
 
-    if (this.preventIndexing) {
-      customElements.push({ 'itunes:block': 'yes' }, { 'googleplay:block': 'yes' })
-    }
-
     const rssData = {
       title: this.title,
       description: this.description || '',
@@ -703,8 +699,7 @@ class Feed extends Model {
       image_url: `${hostPrefix}${this.imageURL}`,
       custom_namespaces: {
         itunes: 'http://www.itunes.com/dtds/podcast-1.0.dtd',
-        podcast: 'https://podcastindex.org/namespace/1.0',
-        googleplay: 'http://www.google.com/schemas/play-podcasts/1.0'
+        podcast: 'https://podcastindex.org/namespace/1.0'
       },
       custom_elements: customElements
     }

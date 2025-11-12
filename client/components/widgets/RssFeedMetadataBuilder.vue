@@ -76,7 +76,7 @@ export default {
       type: Object,
       default: () => {
         return {
-          preventIndexing: true,
+          preventIndexing: false,
           ownerName: '',
           ownerEmail: '',
           categories: [],
