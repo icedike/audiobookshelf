@@ -397,7 +397,8 @@ class Server {
         '/collection/:id',
         '/playlist/:id',
         '/share/:slug',
-        '/p/:slug'
+        '/p/:slug',
+        '/p/:slug/episode/:episodeId'
       ]
       dynamicRoutes.forEach((route) => router.get(route, (req, res) => res.sendFile(Path.join(distPath, 'index.html'))))
     } else {

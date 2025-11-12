@@ -26,6 +26,7 @@ class PublicRouter {
 
     // Public podcast routes
     this.router.get('/p/:slug', PublicController.getPublicPodcast.bind(this))
+    this.router.get('/p/:slug/episode/:episodeId', PublicController.getPublicEpisode.bind(this))
     this.router.patch('/p/:slug/episode/:episodeId/progress', PublicController.updateEpisodeProgress.bind(this))
   }
 }

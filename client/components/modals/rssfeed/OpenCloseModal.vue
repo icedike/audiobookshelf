@@ -5,7 +5,7 @@
         <p class="text-3xl text-white truncate">{{ title }}</p>
       </div>
     </template>
-    <div ref="wrapper" class="px-8 py-6 w-full text-sm rounded-lg bg-bg shadow-lg border border-black-300 relative overflow-hidden">
+    <div ref="wrapper" class="px-8 py-6 w-full text-sm rounded-lg bg-bg shadow-lg border border-black-300 relative overflow-y-auto max-h-[80vh]">
       <div v-if="currentFeed" class="w-full">
         <p class="text-lg font-semibold mb-4">{{ $strings.HeaderRSSFeedIsOpen }}</p>
 

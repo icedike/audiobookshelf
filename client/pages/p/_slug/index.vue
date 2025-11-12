@@ -1,57 +1,63 @@
 <template>
   <div class="w-full min-h-screen bg-bg text-white">
-    <!-- Header with Podcast Info -->
-    <div class="w-full bg-primary bg-opacity-30">
-      <div class="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div class="flex flex-col md:flex-row gap-6">
-          <!-- Cover Image -->
-          <div class="flex-shrink-0">
-            <div class="w-48 h-48 sm:w-64 sm:h-64 mx-auto md:mx-0 rounded-lg overflow-hidden shadow-lg">
-              <img :src="coverUrl" :alt="podcast.title" class="w-full h-full object-cover" />
-            </div>
-          </div>
+    <!-- Show child route (episode page) if accessing episode -->
+    <nuxt-child v-if="$route.params.episodeId" />
 
-          <!-- Podcast Info -->
-          <div class="flex-1 flex flex-col justify-center">
-            <h1 class="text-3xl sm:text-4xl font-bold mb-2 line-clamp-2">{{ podcast.title }}</h1>
-            <p v-if="podcast.author" class="text-lg text-gray-300 mb-4">{{ podcast.author }}</p>
-
-            <div v-if="podcast.description" class="text-sm text-gray-400 mb-4 line-clamp-3 md:line-clamp-4">
-              <div v-html="podcast.description"></div>
+    <!-- Show podcast info and episodes list only when NOT on episode page -->
+    <template v-else>
+      <!-- Header with Podcast Info -->
+      <div class="w-full bg-primary bg-opacity-30">
+        <div class="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+          <div class="flex flex-col md:flex-row gap-6">
+            <!-- Cover Image -->
+            <div class="flex-shrink-0">
+              <div class="w-48 h-48 sm:w-64 sm:h-64 mx-auto md:mx-0 rounded-lg overflow-hidden shadow-lg">
+                <img :src="coverUrl" :alt="podcast.title" class="w-full h-full object-cover" />
+              </div>
             </div>
 
-            <!-- Categories -->
-            <div v-if="podcast.categories && podcast.categories.length" class="flex flex-wrap gap-2 mb-4">
-              <span v-for="(cat, idx) in podcast.categories" :key="idx" class="px-3 py-1 bg-white bg-opacity-10 rounded-full text-xs">
-                {{ cat.category }}<span v-if="cat.subcategory"> › {{ cat.subcategory }}</span>
-              </span>
-            </div>
+            <!-- Podcast Info -->
+            <div class="flex-1 flex flex-col justify-center">
+              <h1 class="text-3xl sm:text-4xl font-bold mb-2 line-clamp-2">{{ podcast.title }}</h1>
+              <p v-if="podcast.author" class="text-lg text-gray-300 mb-4">{{ podcast.author }}</p>
 
-            <!-- Action Buttons -->
-            <div class="flex flex-wrap gap-3">
-              <podcast-subscribe-button :feed-url="podcast.feedURL" :platform-links="podcast.platformLinks" />
-              <podcast-share-button :podcast-title="podcast.title" />
+              <div v-if="podcast.description" class="text-sm text-gray-400 mb-4 line-clamp-3 md:line-clamp-4">
+                <div v-html="podcast.description"></div>
+              </div>
+
+              <!-- Categories -->
+              <div v-if="podcast.categories && podcast.categories.length" class="flex flex-wrap gap-2 mb-4">
+                <span v-for="(cat, idx) in podcast.categories" :key="idx" class="px-3 py-1 bg-primary text-gray-200 rounded-full text-xs border border-gray-600">
+                  {{ cat.category }}<span v-if="cat.subcategory"> › {{ cat.subcategory }}</span>
+                </span>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex flex-wrap gap-3">
+                <podcast-subscribe-button :feed-url="podcast.feedURL" :platform-links="podcast.platformLinks" />
+                <podcast-share-button :podcast-title="podcast.title" />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Episodes List -->
-    <div class="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <div class="mb-6">
-        <h2 class="text-2xl font-bold">Episodes ({{ podcast.episodes.length }})</h2>
+      <!-- Episodes List -->
+      <div class="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold">Episodes ({{ podcast.episodes.length }})</h2>
+        </div>
+
+        <podcast-episode-list
+          :episodes="podcast.episodes"
+          :podcast-slug="podcast.slug"
+          :session-progress="podcast.sessionProgress"
+          @play="handlePlay"
+          @pause="handlePause"
+          @progress="handleProgress"
+        />
       </div>
-
-      <podcast-episode-list
-        :episodes="podcast.episodes"
-        :podcast-slug="podcast.slug"
-        :session-progress="podcast.sessionProgress"
-        @play="handlePlay"
-        @pause="handlePause"
-        @progress="handleProgress"
-      />
-    </div>
+    </template>
   </div>
 </template>
 

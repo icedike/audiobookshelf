@@ -158,6 +158,65 @@ class PublicController {
       res.status(500).send('Internal server error')
     }
   }
+
+  /**
+   * Public route
+   * GET: /p/:slug/episode/:episodeId
+   * Get public podcast episode page data
+   *
+   * @param {Request} req
+   * @param {Response} res
+   */
+  async getPublicEpisode(req, res) {
+    const { slug, episodeId } = req.params
+
+    try {
+      const serverAddress = req.originalHostPrefix || `${req.protocol}://${req.get('host')}${global.RouterBasePath}`
+      const feedData = await RssFeedManager.getFeedDataAsJson(slug, serverAddress)
+
+      if (!feedData) {
+        Logger.warn(`[PublicController] Podcast feed not found with slug ${slug}`)
+        return res.status(404).send('Podcast not found')
+      }
+
+      // Find the specific episode
+      const episode = feedData.episodes.find(ep => ep.id === episodeId)
+      if (!episode) {
+        Logger.warn(`[PublicController] Episode not found with id ${episodeId}`)
+        return res.status(404).send('Episode not found')
+      }
+
+      // Get session progress for this episode
+      let sessionProgress = null
+      const sessionId = req.cookies.podcast_session_id
+      if (sessionId && uuid.validate(sessionId)) {
+        const session = podcastSessionManager.getSession(sessionId)
+        if (session && session.currentEpisodeId === episodeId) {
+          sessionProgress = session.currentTime
+        }
+      }
+
+      // Return podcast info + episode details
+      const response = {
+        podcast: {
+          id: feedData.id,
+          slug: feedData.slug,
+          title: feedData.title,
+          author: feedData.author,
+          description: feedData.description,
+          coverUrl: feedData.coverUrl,
+          feedURL: feedData.feedURL
+        },
+        episode: episode,
+        sessionProgress: sessionProgress
+      }
+
+      res.json(response)
+    } catch (error) {
+      Logger.error(`[PublicController] Failed to get public episode`, error)
+      res.status(500).send('Internal server error')
+    }
+  }
 }
 
 module.exports = new PublicController()

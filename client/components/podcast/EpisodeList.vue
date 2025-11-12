@@ -1,11 +1,11 @@
 <template>
   <div class="space-y-4">
-    <div v-for="episode in episodes" :key="episode.id" class="bg-primary bg-opacity-30 rounded-lg overflow-hidden transition-all">
+    <div v-for="episode in episodes" :key="episode.id" class="bg-primary bg-opacity-30 rounded-lg overflow-hidden transition-all hover:bg-opacity-40 cursor-pointer" @click="navigateToEpisode(episode.id)">
       <!-- Episode Card -->
       <div class="p-4 sm:p-6">
         <div class="flex gap-4">
           <!-- Play Button -->
-          <button @click="togglePlay(episode)" class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-success hover:bg-success-hover flex items-center justify-center transition-colors" :class="{ 'bg-yellow-500 hover:bg-yellow-600': isPlaying(episode.id) }">
+          <button @click.stop="togglePlay(episode)" class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-success hover:bg-success-hover flex items-center justify-center transition-colors" :class="{ 'bg-yellow-500 hover:bg-yellow-600': isPlaying(episode.id) }">
             <span class="material-symbols text-2xl sm:text-3xl text-white">
               {{ isPlaying(episode.id) ? 'pause' : 'play_arrow' }}
             </span>
@@ -27,7 +27,7 @@
               <div v-html="episode.description"></div>
             </div>
 
-            <button v-if="episode.description && episode.description.length > 200" @click="expandedEpisode = expandedEpisode === episode.id ? null : episode.id" class="text-sm text-primary-light hover:text-primary-lighter">
+            <button v-if="episode.description && episode.description.length > 200" @click.stop="expandedEpisode = expandedEpisode === episode.id ? null : episode.id" class="text-sm text-primary-light hover:text-primary-lighter">
               {{ expandedEpisode === episode.id ? 'Show less' : 'Show more' }}
             </button>
 
@@ -137,6 +137,10 @@ export default {
     }
   },
   methods: {
+    navigateToEpisode(episodeId) {
+      const path = `/p/${this.podcastSlug}/episode/${episodeId}`
+      this.$router.push(path)
+    },
     isPlaying(episodeId) {
       return this.currentEpisodeId === episodeId && this.isAudioPlaying
     },

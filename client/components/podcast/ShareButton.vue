@@ -1,6 +1,6 @@
 <template>
   <div>
-    <button @click="showModal = true" class="flex items-center gap-2 px-4 py-2 bg-white bg-opacity-10 hover:bg-opacity-20 text-white rounded-md transition-colors">
+    <button @click="showModal = true" class="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-md transition-colors border border-gray-600">
       <span class="material-symbols text-base">share</span>
       <span>Share</span>
     </button>
@@ -20,7 +20,7 @@
         <!-- Page URL -->
         <div class="bg-bg rounded-md p-3 mb-4 flex items-center gap-2">
           <input ref="urlInput" :value="pageUrl" readonly class="flex-1 bg-transparent text-sm outline-none text-gray-300" @click="selectAll" />
-          <button @click="copyUrl" class="px-3 py-1 bg-white bg-opacity-10 hover:bg-opacity-20 rounded text-sm transition-colors">
+          <button @click="copyUrl" class="px-3 py-1 bg-primary hover:bg-primary-hover rounded text-sm transition-colors border border-gray-600">
             {{ copied ? 'Copied!' : 'Copy' }}
           </button>
         </div>
@@ -29,7 +29,7 @@
         <div class="mb-4">
           <p class="text-sm text-gray-400 mb-2">Share on:</p>
           <div class="flex flex-wrap gap-2">
-            <a v-for="platform in socialPlatforms" :key="platform.name" :href="platform.url" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-3 py-2 bg-white bg-opacity-5 hover:bg-opacity-10 rounded text-sm transition-colors">
+            <a v-for="platform in socialPlatforms" :key="platform.name" :href="platform.url" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-3 py-2 bg-bg hover:bg-primary rounded text-sm transition-colors border border-gray-600">
               <span>{{ platform.icon }}</span>
               <span>{{ platform.name }}</span>
             </a>

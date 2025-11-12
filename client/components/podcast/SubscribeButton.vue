@@ -25,7 +25,7 @@
               :href="platform.url"
               target="_blank"
               rel="noopener noreferrer"
-              class="flex items-center gap-2 px-3 py-2 bg-white bg-opacity-5 hover:bg-opacity-10 rounded text-sm transition-colors"
+              class="flex items-center gap-2 px-3 py-2 bg-bg hover:bg-primary rounded text-sm transition-colors border border-gray-600"
             >
               <span class="text-base">{{ platform.icon }}</span>
               <span>{{ platform.name }}</span>
@@ -48,13 +48,13 @@
               class="flex-1 bg-transparent text-sm outline-none text-gray-300"
               @click="selectAll"
             />
-            <button @click="copyFeedUrl" class="px-3 py-1 bg-white bg-opacity-10 hover:bg-opacity-20 rounded text-sm transition-colors">
+            <button @click="copyFeedUrl" class="px-3 py-1 bg-primary hover:bg-primary-hover rounded text-sm transition-colors border border-gray-600">
               {{ copied ? 'Copied!' : 'Copy' }}
             </button>
           </div>
 
           <!-- Instructions -->
-          <div class="bg-white bg-opacity-5 rounded-md p-3 text-xs text-gray-400">
+          <div class="bg-bg rounded-md p-3 text-xs text-gray-400 border border-gray-700">
             <p class="font-semibold mb-1">How to subscribe with RSS:</p>
             <ol class="list-decimal list-inside space-y-1 ml-2">
               <li>Copy the RSS feed URL above</li>
