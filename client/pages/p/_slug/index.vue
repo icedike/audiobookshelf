@@ -130,10 +130,25 @@ export default {
     },
     podcastDescription() {
       if (!this.podcast.description) return ''
+
       // Strip HTML tags for meta description
-      const div = document.createElement('div')
-      div.innerHTML = this.podcast.description
-      return (div.textContent || div.innerText || '').substring(0, 200)
+      let text = this.podcast.description
+      if (process.client) {
+        const div = document.createElement('div')
+        div.innerHTML = this.podcast.description
+        text = div.textContent || div.innerText || ''
+      } else {
+        // Server-side: use simple regex to strip HTML tags
+        text = this.podcast.description.replace(/<[^>]*>/g, '')
+      }
+
+      // Smart truncate: cut at word boundary and add ellipsis
+      text = text.trim()
+      if (text.length <= 200) return text
+
+      const truncated = text.substring(0, 200)
+      const lastSpace = truncated.lastIndexOf(' ')
+      return lastSpace > 0 ? truncated.substring(0, lastSpace) + '...' : truncated + '...'
     },
     pageUrl() {
       if (process.client) {

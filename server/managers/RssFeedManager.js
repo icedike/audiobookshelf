@@ -247,7 +247,7 @@ class RssFeedManager {
       coverPath: feed.coverPath,
       coverUrl: `${serverAddress}/feed/${slug}/cover`,
       imageURL: feed.imageURL,
-      feedURL: feed.feedURL,
+      feedURL: `${serverAddress}/feed/${slug}`,
       siteURL: feed.siteURL,
       preventIndexing: feed.preventIndexing,
       categories: feed.categories || [],
