@@ -167,7 +167,8 @@ class RssFeedManager {
         slug: req.params.slug
       },
       include: {
-        model: Database.feedEpisodeModel
+        model: Database.feedEpisodeModel,
+        order: [['pubDate', 'DESC']]
       }
     })
     if (!feed) {
@@ -200,7 +201,8 @@ class RssFeedManager {
         slug
       },
       include: {
-        model: Database.feedEpisodeModel
+        model: Database.feedEpisodeModel,
+        order: [['pubDate', 'DESC']]
       }
     })
 
