@@ -167,8 +167,7 @@ class RssFeedManager {
         slug: req.params.slug
       },
       include: {
-        model: Database.feedEpisodeModel,
-        order: [['pubDate', 'DESC']]
+        model: Database.feedEpisodeModel
       }
     })
     if (!feed) {
@@ -181,6 +180,15 @@ class RssFeedManager {
     if (feedRequiresUpdate) {
       Logger.info(`[RssFeedManager] Feed "${feed.title}" requires update - updating feed`)
       feed = await feed.updateFeedForEntity()
+    }
+
+    // Sort episodes by pubDate or createdAt (newest first)
+    if (feed.feedEpisodes && feed.feedEpisodes.length > 0) {
+      feed.feedEpisodes.sort((a, b) => {
+        const dateA = new Date(a.pubDate || a.createdAt)
+        const dateB = new Date(b.pubDate || b.createdAt)
+        return dateB - dateA // DESC
+      })
     }
 
     const xml = feed.buildXml(req.originalHostPrefix)
@@ -201,8 +209,7 @@ class RssFeedManager {
         slug
       },
       include: {
-        model: Database.feedEpisodeModel,
-        order: [['pubDate', 'DESC']]
+        model: Database.feedEpisodeModel
       }
     })
 
@@ -214,6 +221,15 @@ class RssFeedManager {
     if (feedRequiresUpdate) {
       Logger.info(`[RssFeedManager] Feed "${feed.title}" requires update - updating feed`)
       feed = await feed.updateFeedForEntity()
+    }
+
+    // Sort episodes by pubDate or createdAt (newest first)
+    if (feed.feedEpisodes && feed.feedEpisodes.length > 0) {
+      feed.feedEpisodes.sort((a, b) => {
+        const dateA = new Date(a.pubDate || a.createdAt)
+        const dateB = new Date(b.pubDate || b.createdAt)
+        return dateB - dateA // DESC
+      })
     }
 
     // Convert feed episodes to JSON format

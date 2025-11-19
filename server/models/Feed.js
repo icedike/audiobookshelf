@@ -127,7 +127,7 @@ class Feed extends Model {
       serverAddress,
       feedURL: `/feed/${slug}`,
       imageURL: media.coverPath ? `/feed/${slug}/cover${Path.extname(media.coverPath)}` : `/Logo.png`,
-      siteURL: `/item/${libraryItem.id}`,
+      siteURL: `/p/${slug}`,
       title: media.title,
       description: media.description,
       author: libraryItem.mediaType === 'podcast' ? media.author : media.authorName,
@@ -693,7 +693,7 @@ class Feed extends Model {
     const rssData = {
       title: this.title,
       description: this.description || '',
-      generator: 'Audiobookshelf',
+      generator: 'Transferhelper',
       feed_url: `${hostPrefix}${this.feedURL}`,
       site_url: `${hostPrefix}${this.siteURL}`,
       image_url: `${hostPrefix}${this.imageURL}`,
@@ -706,7 +706,7 @@ class Feed extends Model {
 
     const rssfeed = new RSS(rssData)
     this.feedEpisodes.forEach((ep) => {
-      rssfeed.item(ep.getRSSData(hostPrefix))
+      rssfeed.item(ep.getRSSData(hostPrefix, this.slug))
     })
     return rssfeed.xml()
   }

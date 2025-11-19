@@ -62,7 +62,7 @@ class FeedEpisode extends Model {
       title: episode.title,
       author: feed.author,
       description: episode.description,
-      siteURL: feed.siteURL,
+      siteURL: `/p/${slug}/episode/${episodeId}`,
       enclosureURL: `/feed/${slug}/item/${episodeId}/media${Path.extname(episode.audioFile.metadata.filename)}`,
       enclosureType: episode.audioFile.mimeType,
       enclosureSize: episode.audioFile.metadata.size,
@@ -166,7 +166,7 @@ class FeedEpisode extends Model {
       title,
       author: feed.author,
       description: book.description || '',
-      siteURL: feed.siteURL,
+      siteURL: `/p/${slug}/episode/${episodeId}`,
       enclosureURL: contentUrl,
       enclosureType: audioTrack.mimeType,
       enclosureSize: audioTrack.metadata.size,
@@ -310,8 +310,9 @@ class FeedEpisode extends Model {
   /**
    *
    * @param {string} hostPrefix
+   * @param {string} slug
    */
-  getRSSData(hostPrefix) {
+  getRSSData(hostPrefix, slug) {
     const customElements = [
       { 'itunes:author': this.author || null },
       { 'itunes:duration': Math.round(Number(this.duration)) },
@@ -329,13 +330,19 @@ class FeedEpisode extends Model {
       customElements.push({ 'itunes:summary': { _cdata: this.description } })
     }
 
+    // Construct episode URL for public page
+    const episodeUrl = slug ? `/p/${slug}/episode/${this.id}` : this.siteURL
+
+    // Use pubDate if available, otherwise fall back to createdAt
+    const episodeDate = this.pubDate || (this.createdAt ? new Date(this.createdAt).toUTCString() : null)
+
     return {
       title: this.title,
       description: this.description || '',
-      url: `${hostPrefix}${this.siteURL}`,
+      url: `${hostPrefix}${episodeUrl}`,
       guid: `${hostPrefix}${this.enclosureURL}`,
       author: this.author,
-      date: this.pubDate,
+      date: episodeDate,
       enclosure: {
         url: `${hostPrefix}${this.enclosureURL}`,
         type: this.enclosureType,
