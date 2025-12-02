@@ -35,6 +35,7 @@ const PodcastManager = require('./managers/PodcastManager')
 const AudioMetadataMangaer = require('./managers/AudioMetadataManager')
 const RssFeedManager = require('./managers/RssFeedManager')
 const SitemapController = require('./controllers/SitemapController')
+const { generatePodcastMetaTags, generateEpisodeMetaTags, injectMetaTags } = require('./utils/htmlMetaInjector')
 const CronManager = require('./managers/CronManager')
 const ApiCacheManager = require('./managers/ApiCacheManager')
 const BinaryManager = require('./managers/BinaryManager')
@@ -384,7 +385,64 @@ class Server {
       const distPath = Path.join(global.appRoot, '/client/dist')
       router.use(express.static(distPath))
 
-      // Client dynamic routes
+      // Public podcast pages with SEO meta tag injection
+      router.get('/p/:slug', async (req, res) => {
+        try {
+          const { slug } = req.params
+          const serverAddress = req.originalHostPrefix
+
+          // Get podcast data
+          const feedData = await RssFeedManager.getFeedDataAsJson(slug, serverAddress)
+
+          if (!feedData) {
+            // Podcast not found, still serve the page (client will handle 404)
+            return res.sendFile(Path.join(distPath, 'index.html'))
+          }
+
+          // Read index.html and inject meta tags
+          const html = await fs.readFile(Path.join(distPath, 'index.html'), 'utf-8')
+          const metaTags = generatePodcastMetaTags(feedData, serverAddress)
+          const modifiedHtml = injectMetaTags(html, metaTags)
+
+          res.type('text/html').send(modifiedHtml)
+        } catch (error) {
+          Logger.error('[Server] Error serving public podcast page', error)
+          res.sendFile(Path.join(distPath, 'index.html'))
+        }
+      })
+
+      router.get('/p/:slug/episode/:episodeId', async (req, res) => {
+        try {
+          const { slug, episodeId } = req.params
+          const serverAddress = req.originalHostPrefix
+
+          // Get podcast data
+          const feedData = await RssFeedManager.getFeedDataAsJson(slug, serverAddress)
+
+          if (!feedData) {
+            return res.sendFile(Path.join(distPath, 'index.html'))
+          }
+
+          // Find the episode
+          const episode = feedData.episodes?.find((ep) => ep.id === episodeId)
+
+          if (!episode) {
+            return res.sendFile(Path.join(distPath, 'index.html'))
+          }
+
+          // Read index.html and inject meta tags
+          const html = await fs.readFile(Path.join(distPath, 'index.html'), 'utf-8')
+          const metaTags = generateEpisodeMetaTags(feedData, episode, serverAddress)
+          const modifiedHtml = injectMetaTags(html, metaTags)
+
+          res.type('text/html').send(modifiedHtml)
+        } catch (error) {
+          Logger.error('[Server] Error serving public episode page', error)
+          res.sendFile(Path.join(distPath, 'index.html'))
+        }
+      })
+
+      // Client dynamic routes (excluding public podcast pages which are handled above)
       const dynamicRoutes = [
         '/item/:id',
         '/author/:id',
@@ -406,9 +464,7 @@ class Server {
         '/config/item-metadata-utils/:id',
         '/collection/:id',
         '/playlist/:id',
-        '/share/:slug',
-        '/p/:slug',
-        '/p/:slug/episode/:episodeId'
+        '/share/:slug'
       ]
       dynamicRoutes.forEach((route) => router.get(route, (req, res) => res.sendFile(Path.join(distPath, 'index.html'))))
     } else {
