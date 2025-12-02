@@ -34,6 +34,7 @@ const PlaybackSessionManager = require('./managers/PlaybackSessionManager')
 const PodcastManager = require('./managers/PodcastManager')
 const AudioMetadataMangaer = require('./managers/AudioMetadataManager')
 const RssFeedManager = require('./managers/RssFeedManager')
+const SitemapController = require('./controllers/SitemapController')
 const CronManager = require('./managers/CronManager')
 const ApiCacheManager = require('./managers/ApiCacheManager')
 const BinaryManager = require('./managers/BinaryManager')
@@ -285,6 +286,9 @@ class Server {
 
     const router = express.Router()
 
+    // robots.txt must be at root path for search engines (before URL rewrite middleware)
+    app.get('/robots.txt', SitemapController.getRobotsTxt.bind(SitemapController))
+
     // if RouterBasePath is set, modify all requests to include the base path
     app.use((req, res, next) => {
       const urlStartsWithRouterBasePath = req.url.startsWith(global.RouterBasePath)
@@ -297,6 +301,7 @@ class Server {
       }
       next()
     })
+
     app.use(global.RouterBasePath, router)
     app.disable('x-powered-by')
 
@@ -334,6 +339,11 @@ class Server {
       Logger.debug(`[Server] Requesting rss feed episode ${req.params.slug}/${req.params.episodeId}`)
       RssFeedManager.getFeedItem(req, res)
     })
+
+    // Sitemap routes
+    router.get('/sitemap.xml', SitemapController.getSitemapIndex.bind(SitemapController))
+    router.get('/sitemap/podcasts.xml', SitemapController.getPodcastsSitemap.bind(SitemapController))
+    router.get('/sitemap/podcast/:slug.xml', SitemapController.getPodcastEpisodesSitemap.bind(SitemapController))
 
     // Auth routes
     await this.auth.initAuthRoutes(router)
