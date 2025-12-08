@@ -2,8 +2,11 @@ services:
   audiobookshelf_custom:
     image: audiobookshelf_custom
     container_name: audiobookshelf_custom
+    platform: linux/amd64
     build:
       context: .
+      args:
+        - TARGETPLATFORM=linux/amd64
     ports:
       - 3042:80
     volumes:
