@@ -186,6 +186,70 @@ class RSSFeedController {
   }
 
   /**
+   * PATCH: /api/feeds/:id
+   * Update RSS feed settings (ownerName, ownerEmail, preventIndexing, categories, platformLinks)
+   *
+   * @this {import('../routers/ApiRouter')}
+   *
+   * @param {RequestWithUser} req
+   * @param {Response} res
+   */
+  async updateRSSFeed(req, res) {
+    const feed = await Database.feedModel.findByPk(req.params.id)
+    if (!feed) {
+      Logger.error(`[RSSFeedController] Cannot update RSS feed because feed "${req.params.id}" does not exist`)
+      return res.sendStatus(404)
+    }
+
+    const reqBody = req.body || {}
+    const updateData = {}
+
+    // Update allowed fields
+    if (reqBody.ownerName !== undefined) {
+      updateData.ownerName = reqBody.ownerName || null
+    }
+    if (reqBody.ownerEmail !== undefined) {
+      updateData.ownerEmail = reqBody.ownerEmail || null
+    }
+    if (reqBody.preventIndexing !== undefined) {
+      updateData.preventIndexing = !!reqBody.preventIndexing
+    }
+    if (reqBody.categories !== undefined) {
+      // Validate and limit categories to 3
+      if (Array.isArray(reqBody.categories)) {
+        const { validateCategory } = require('../utils/podcastCategories')
+        updateData.categories = reqBody.categories.slice(0, 3).filter(cat =>
+          cat.category && validateCategory(cat.category, cat.subcategory)
+        )
+      }
+    }
+    if (reqBody.platformLinks !== undefined) {
+      if (typeof reqBody.platformLinks === 'object' && reqBody.platformLinks !== null) {
+        updateData.platformLinks = reqBody.platformLinks
+      }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).send('No valid fields to update')
+    }
+
+    try {
+      await feed.update(updateData)
+      Logger.info(`[RSSFeedController] Updated RSS feed "${feed.id}"`)
+
+      // Reload feed to get updated data
+      await feed.reload()
+
+      res.json({
+        feed: feed.toOldJSONMinified()
+      })
+    } catch (error) {
+      Logger.error(`[RSSFeedController] Failed to update RSS feed "${feed.id}"`, error)
+      return res.status(500).send('Failed to update RSS feed')
+    }
+  }
+
+  /**
    *
    * @param {RequestWithUser} req
    * @param {Response} res

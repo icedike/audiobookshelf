@@ -765,7 +765,9 @@ class Feed extends Model {
         description: this.description,
         preventIndexing: this.preventIndexing,
         ownerName: this.ownerName,
-        ownerEmail: this.ownerEmail
+        ownerEmail: this.ownerEmail,
+        categories: this.categories,
+        platformLinks: this.platformLinks
       }
     }
   }

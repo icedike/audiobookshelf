@@ -307,6 +307,7 @@ class ApiRouter {
     this.router.post('/feeds/collection/:collectionId/open', RSSFeedController.middleware.bind(this), RSSFeedController.openRSSFeedForCollection.bind(this))
     this.router.post('/feeds/series/:seriesId/open', RSSFeedController.middleware.bind(this), RSSFeedController.openRSSFeedForSeries.bind(this))
     this.router.post('/feeds/:id/close', RSSFeedController.middleware.bind(this), RSSFeedController.closeRSSFeed.bind(this))
+    this.router.patch('/feeds/:id', RSSFeedController.middleware.bind(this), RSSFeedController.updateRSSFeed.bind(this))
 
     //
     // Custom Metadata Provider routes

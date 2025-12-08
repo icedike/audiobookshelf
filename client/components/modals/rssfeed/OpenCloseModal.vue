@@ -6,7 +6,7 @@
       </div>
     </template>
     <div ref="wrapper" class="px-8 py-6 w-full text-sm rounded-lg bg-bg shadow-lg border border-black-300 relative overflow-y-auto max-h-[80vh]">
-      <div v-if="currentFeed" class="w-full">
+      <div v-if="currentFeed && !isEditing" class="w-full">
         <p class="text-lg font-semibold mb-4">{{ $strings.HeaderRSSFeedIsOpen }}</p>
 
         <div class="w-full relative">
@@ -20,17 +20,17 @@
             </div>
             <div>{{ currentFeed.meta.preventIndexing ? 'Yes' : 'No' }}</div>
           </div>
-          <div v-if="currentFeed.meta.ownerName" class="flex py-0.5">
+          <div class="flex py-0.5">
             <div class="w-48">
               <span class="text-white/60 uppercase text-sm">{{ $strings.LabelRSSFeedCustomOwnerName }}</span>
             </div>
-            <div>{{ currentFeed.meta.ownerName }}</div>
+            <div>{{ currentFeed.meta.ownerName || '-' }}</div>
           </div>
-          <div v-if="currentFeed.meta.ownerEmail" class="flex py-0.5">
+          <div class="flex py-0.5">
             <div class="w-48">
               <span class="text-white/60 uppercase text-sm">{{ $strings.LabelRSSFeedCustomOwnerEmail }}</span>
             </div>
-            <div>{{ currentFeed.meta.ownerEmail }}</div>
+            <div>{{ currentFeed.meta.ownerEmail || '-' }}</div>
           </div>
           <div v-if="currentFeed.meta.categories && currentFeed.meta.categories.length" class="flex py-0.5">
             <div class="w-48">
@@ -43,6 +43,14 @@
             </div>
           </div>
         </div>
+      </div>
+      <div v-else-if="currentFeed && isEditing" class="w-full">
+        <p class="text-lg font-semibold mb-4">Edit RSS Feed Settings</p>
+
+        <div class="w-full relative mb-2">
+          <ui-text-input :value="feedUrl" readonly show-copy />
+        </div>
+        <widgets-rss-feed-metadata-builder v-model="metadataDetails" />
       </div>
       <div v-else class="w-full">
         <p class="text-lg font-semibold mb-4">{{ $strings.HeaderOpenRSSFeed }}</p>
@@ -58,7 +66,16 @@
       </div>
       <div v-show="userIsAdminOrUp" class="flex items-center pt-6">
         <div class="grow" />
-        <ui-btn v-if="currentFeed" color="bg-error" small @click="closeFeed">{{ $strings.ButtonCloseFeed }}</ui-btn>
+        <template v-if="currentFeed">
+          <template v-if="isEditing">
+            <ui-btn color="primary" small class="mr-2" @click="cancelEdit">Cancel</ui-btn>
+            <ui-btn color="bg-success" small @click="saveFeed">Save</ui-btn>
+          </template>
+          <template v-else>
+            <ui-btn color="primary" small class="mr-2" @click="startEdit">Edit</ui-btn>
+            <ui-btn color="bg-error" small @click="closeFeed">{{ $strings.ButtonCloseFeed }}</ui-btn>
+          </template>
+        </template>
         <ui-btn v-else color="bg-success" small @click="openFeed">{{ $strings.ButtonOpenFeed }}</ui-btn>
       </div>
     </div>
@@ -72,11 +89,13 @@ export default {
       processing: false,
       newFeedSlug: null,
       currentFeed: null,
+      isEditing: false,
       metadataDetails: {
         preventIndexing: false,
         ownerName: '',
         ownerEmail: '',
-        categories: []
+        categories: [],
+        platformLinks: {}
       }
     }
   },
@@ -185,10 +204,62 @@ export default {
           this.processing = false
         })
     },
+    startEdit() {
+      // Load current feed settings into metadataDetails
+      if (this.currentFeed && this.currentFeed.meta) {
+        this.metadataDetails = {
+          preventIndexing: this.currentFeed.meta.preventIndexing || false,
+          ownerName: this.currentFeed.meta.ownerName || '',
+          ownerEmail: this.currentFeed.meta.ownerEmail || '',
+          categories: this.currentFeed.meta.categories || [],
+          platformLinks: this.currentFeed.meta.platformLinks || {}
+        }
+      }
+      this.isEditing = true
+    },
+    cancelEdit() {
+      this.isEditing = false
+      // Reset metadataDetails
+      this.metadataDetails = {
+        preventIndexing: false,
+        ownerName: '',
+        ownerEmail: '',
+        categories: [],
+        platformLinks: {}
+      }
+    },
+    saveFeed() {
+      this.processing = true
+      const payload = {
+        preventIndexing: this.metadataDetails.preventIndexing,
+        ownerName: this.metadataDetails.ownerName,
+        ownerEmail: this.metadataDetails.ownerEmail,
+        categories: this.metadataDetails.categories,
+        platformLinks: this.metadataDetails.platformLinks
+      }
+
+      this.$axios
+        .$patch(`/api/feeds/${this.currentFeed.id}`, payload)
+        .then((data) => {
+          console.log('Updated RSS Feed', data)
+          this.currentFeed = data.feed
+          this.isEditing = false
+          this.$toast.success('RSS Feed updated successfully')
+        })
+        .catch((error) => {
+          console.error('Failed to update RSS Feed', error)
+          const errorMsg = error.response ? error.response.data : null
+          this.$toast.error(errorMsg || 'Failed to update RSS Feed')
+        })
+        .finally(() => {
+          this.processing = false
+        })
+    },
     init() {
       if (!this.entityId) return
       this.newFeedSlug = this.entityId
       this.currentFeed = this.entityFeed
+      this.isEditing = false
     }
   },
   mounted() {}
